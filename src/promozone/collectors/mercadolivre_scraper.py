@@ -216,6 +216,9 @@ class MercadoLivreScraperClient:
         if not item_id:
             return None
 
+        # Debug: log metadata para ver campos disponíveis
+        logger.debug("Item %s metadata keys: %s", item_id, list(metadata.keys()))
+
         # ===== EXTRAÇÃO DE COMPONENTES =====
         # Components é uma lista de objetos, cada um com um tipo
         # (title, price, seller, etc)
@@ -227,6 +230,11 @@ class MercadoLivreScraperClient:
         original_price = None
         seller_name = None
         permalink = ""
+
+        # Tenta extrair permalink do action do polycard (nível raiz)
+        action = polycard.get("action", {})
+        if action and "target" in action:
+            permalink = action.get("target", "")
 
         # Percorre cada componente procurando os dados que precisamos
         for comp in components:
@@ -256,13 +264,31 @@ class MercadoLivreScraperClient:
                 seller_name = re.sub(r'\{[^}]+\}', '', raw_text).strip()
 
         # ===== CONSTRUÇÃO DA URL DO PRODUTO =====
-        # Se não encontrou a URL no componente title, tenta extrair do metadata
+        # Prioridade 1: action.target (já extraído acima do polycard)
+        # Prioridade 2: metadata.url (URL real do item)
+        if not permalink:
+            url_from_metadata = metadata.get("url", "")
+            # Se a URL começa com www, adiciona https://
+            if url_from_metadata.startswith("www."):
+                permalink = f"https://{url_from_metadata}"
+            # Se já tem http/https, usa direto
+            elif url_from_metadata.startswith("http"):
+                permalink = url_from_metadata
+            # Se começa com /, adiciona o domínio
+            elif url_from_metadata.startswith("/"):
+                permalink = f"https://www.mercadolivre.com.br{url_from_metadata}"
+            else:
+                permalink = url_from_metadata
+
+        # Prioridade 3: metadata.permalink
         if not permalink:
             permalink = metadata.get("permalink", "")
 
-        # Fallback: constrói URL básica se ainda não tiver
+        # Fallback: constrói URL básica
         if not permalink:
             permalink = f"https://www.mercadolivre.com.br/p/{item_id}"
+
+        logger.debug("Item %s: permalink=%s", item_id, permalink)
 
         # ===== EXTRAÇÃO DA IMAGEM =====
         pictures = polycard.get("pictures", {}).get("pictures", [])
