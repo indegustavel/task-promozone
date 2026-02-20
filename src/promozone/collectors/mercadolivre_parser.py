@@ -58,7 +58,7 @@ def _calc_discount(price: float, original_price: Optional[float]) -> Optional[fl
     """
     Calcula o percentual de desconto.
 
-    Fórmula: desconto = (1 - preço_atual / preço_original) * 100
+    Fórmula: desconto = (1 - [preço_atual / preço_original]) * 100
 
     Args:
         price: Preço atual do produto

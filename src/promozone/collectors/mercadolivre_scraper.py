@@ -234,7 +234,11 @@ class MercadoLivreScraperClient:
 
             # Componente de título
             if ctype == "title":
-                title = comp.get("title", {}).get("text", "")
+                title_data = comp.get("title", {})
+                title = title_data.get("text", "")
+                # Extrai a URL real do link do título
+                if not permalink and "link" in title_data:
+                    permalink = title_data.get("link", "")
 
             # Componente de preço
             elif ctype == "price":
@@ -252,7 +256,13 @@ class MercadoLivreScraperClient:
                 seller_name = re.sub(r'\{[^}]+\}', '', raw_text).strip()
 
         # ===== CONSTRUÇÃO DA URL DO PRODUTO =====
-        permalink = f"https://www.mercadolivre.com.br/p/{item_id}"
+        # Se não encontrou a URL no componente title, tenta extrair do metadata
+        if not permalink:
+            permalink = metadata.get("permalink", "")
+
+        # Fallback: constrói URL básica se ainda não tiver
+        if not permalink:
+            permalink = f"https://www.mercadolivre.com.br/p/{item_id}"
 
         # ===== EXTRAÇÃO DA IMAGEM =====
         pictures = polycard.get("pictures", {}).get("pictures", [])

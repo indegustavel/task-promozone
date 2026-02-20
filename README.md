@@ -206,7 +206,7 @@ pip install -r requirements.txt
 
 ### 4. Rodar o servidor
 
-**Opção 1: Script helper (recomendado)**
+**Opção 1: Script helper (recomendado) ✅**
 ```bash
 python run_local.py
 ```
@@ -215,9 +215,15 @@ python run_local.py
 ```bash
 # Linux/Mac
 export PYTHONPATH=src
-uvicorn promozone.api.main:app --reload --port 8080
+python -m uvicorn promozone.api.main:app --reload --port 8080
 
 # Windows PowerShell
+$env:PYTHONPATH="src"
+python -m uvicorn promozone.api.main:app --reload --port 8080
+```
+
+**Opção 3: Rodar de dentro do diretório src**
+```bash
 cd src
 python -m uvicorn promozone.api.main:app --reload --port 8080
 ```
